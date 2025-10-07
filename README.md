@@ -31,27 +31,38 @@ The platform uses four main smart contracts deployed on Starknet:
 
 1. Clone the repository
 2. Install dependencies:
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
+   ```
 
-3. Copy `.env.example` to `.env.local` and configure:
-   \`\`\`bash
+3. Create environment file and configure:
+   ```bash
    cp .env.example .env.local
-   \`\`\`
+   ```
 
-4. Update the contract addresses in `.env.local` with your deployed contract addresses
+4. Update the contract addresses in `.env.local` with your deployed contract addresses:
+   ```bash
+   # Starknet Network Configuration
+   NEXT_PUBLIC_STARKNET_NETWORK=sepolia
+   NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://sepolia.starkscan.co
+
+   # Contract Addresses (Replace with your deployed contract addresses)
+   NEXT_PUBLIC_JOB_MARKETPLACE_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+   NEXT_PUBLIC_PSEUDONYM_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+   NEXT_PUBLIC_ESCROW_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+   NEXT_PUBLIC_ZK_VERIFIER_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+   ```
 
 5. Run the development server:
-   \`\`\`bash
+   ```bash
    npm run dev
-   \`\`\`
+   ```
 
 6. Open [http://localhost:3000](http://localhost:3000)
 
 ### Environment Variables
 
-See `.env.example` for required environment variables:
+Required environment variables:
 
 - `NEXT_PUBLIC_STARKNET_NETWORK`: Network to connect to (sepolia/mainnet)
 - `NEXT_PUBLIC_JOB_MARKETPLACE_ADDRESS`: JobMarketplace contract address
@@ -64,10 +75,11 @@ See `.env.example` for required environment variables:
 ### For Workers
 
 1. **Connect Wallet**: Click "Connect Wallet" and approve the connection
-2. **Register Pseudonym**: Create your anonymous worker profile
-3. **Browse Jobs**: Find jobs that match your skills
-4. **Apply**: Submit applications with ZK proofs of your skills
-5. **Complete Work**: Deliver quality work and get paid automatically
+2. **Register Pseudonym**: Create your anonymous worker profile with a pseudonym
+3. **Add Skills**: Verify your skills using zero-knowledge proofs
+4. **Browse Jobs**: Find jobs that match your skills in the marketplace
+5. **Apply**: Submit applications with ZK proofs of your skills
+6. **Complete Work**: Deliver quality work and get paid automatically
 
 ### For Employers
 
@@ -75,7 +87,40 @@ See `.env.example` for required environment variables:
 2. **Post Job**: Create a job listing with requirements and budget
 3. **Fund Escrow**: Deposit payment into smart contract escrow
 4. **Review Applications**: Evaluate anonymous candidates based on skills
-5. **Approve Work**: Verify deliverables and release payment
+5. **Assign Worker**: Select the best candidate for the job
+6. **Approve Work**: Verify deliverables and release payment
+
+### ZK Proof Verification
+
+1. **Verify Skills**: Use the ZK verification system to prove skill levels
+2. **Verify Identity**: Confirm pseudonym ownership without revealing identity
+3. **Add Keys**: Manage verification keys for different skill types
+4. **View Results**: Track verification results and proof status
+
+## Features
+
+### Core Functionality
+
+- **Anonymous Worker Profiles**: Create pseudonymous identities with verified skills
+- **Job Marketplace**: Post and browse jobs with complete privacy protection
+- **Smart Escrow**: Automated payment release upon work verification
+- **ZK Proof System**: Verify skills and identity without exposing personal data
+- **Reputation System**: Build credibility through quality work
+- **Dispute Resolution**: Handle conflicts through smart contract logic
+
+### Privacy Features
+
+- **Zero-Knowledge Proofs**: Prove credentials without revealing identity
+- **Pseudonymous Profiles**: Work without exposing real identity
+- **Encrypted Communications**: Secure job applications and proposals
+- **Privacy-Preserving Analytics**: Track performance without data exposure
+
+### Security Features
+
+- **Smart Contract Escrow**: Trustless payment protection
+- **Reputation Bonds**: Economic incentives for quality work
+- **Dispute Resolution**: Automated conflict resolution
+- **Emergency Procedures**: Safety mechanisms for edge cases
 
 ## Technology Stack
 

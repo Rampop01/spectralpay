@@ -110,3 +110,169 @@ export function useApplyForJob() {
 
   return { applyForJob, applying, error }
 }
+
+export function useAssignJob() {
+  const contract = useJobMarketplace()
+  const [assigning, setAssigning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const assignJob = async (jobId: string, selectedWorker: string, workerPayoutAddress: string) => {
+    if (!contract) {
+      setError("Wallet not connected")
+      return null
+    }
+
+    setAssigning(true)
+    setError(null)
+    try {
+      const txHash = await contract.assignJob(jobId, selectedWorker, workerPayoutAddress)
+      return txHash
+    } catch (err) {
+      console.error("[v0] Error assigning job:", err)
+      setError("Failed to assign job")
+      return null
+    } finally {
+      setAssigning(false)
+    }
+  }
+
+  return { assignJob, assigning, error }
+}
+
+export function useDisputeWork() {
+  const contract = useJobMarketplace()
+  const [disputing, setDisputing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const disputeWork = async (jobId: string, reason: string) => {
+    if (!contract) {
+      setError("Wallet not connected")
+      return null
+    }
+
+    setDisputing(true)
+    setError(null)
+    try {
+      const txHash = await contract.disputeWork(jobId, reason)
+      return txHash
+    } catch (err) {
+      console.error("[v0] Error disputing work:", err)
+      setError("Failed to dispute work")
+      return null
+    } finally {
+      setDisputing(false)
+    }
+  }
+
+  return { disputeWork, disputing, error }
+}
+
+export function useRequestExtension() {
+  const contract = useJobMarketplace()
+  const [requesting, setRequesting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const requestExtension = async (jobId: string, requestedDays: number, reason: string) => {
+    if (!contract) {
+      setError("Wallet not connected")
+      return null
+    }
+
+    setRequesting(true)
+    setError(null)
+    try {
+      const txHash = await contract.requestDeadlineExtension(jobId, requestedDays, reason)
+      return txHash
+    } catch (err) {
+      console.error("[v0] Error requesting extension:", err)
+      setError("Failed to request extension")
+      return null
+    } finally {
+      setRequesting(false)
+    }
+  }
+
+  return { requestExtension, requesting, error }
+}
+
+export function useRespondToExtension() {
+  const contract = useJobMarketplace()
+  const [responding, setResponding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const respondToExtension = async (jobId: string, approve: boolean, response: string) => {
+    if (!contract) {
+      setError("Wallet not connected")
+      return null
+    }
+
+    setResponding(true)
+    setError(null)
+    try {
+      const txHash = await contract.respondToExtensionRequest(jobId, approve, response)
+      return txHash
+    } catch (err) {
+      console.error("[v0] Error responding to extension:", err)
+      setError("Failed to respond to extension")
+      return null
+    } finally {
+      setResponding(false)
+    }
+  }
+
+  return { respondToExtension, responding, error }
+}
+
+export function useGetApplications() {
+  const contract = useJobMarketplace()
+  const [applications, setApplications] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const getApplications = async (jobId: string) => {
+    if (!contract) return []
+
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await contract.getWorkerApplications(jobId)
+      setApplications(result)
+      return result
+    } catch (err) {
+      console.error("[v0] Error fetching applications:", err)
+      setError("Failed to fetch applications")
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { getApplications, applications, loading, error }
+}
+
+export function useGetExtensionRequests() {
+  const contract = useJobMarketplace()
+  const [extensionRequests, setExtensionRequests] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const getExtensionRequests = async (jobId: string) => {
+    if (!contract) return []
+
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await contract.getExtensionRequests(jobId)
+      setExtensionRequests(result)
+      return result
+    } catch (err) {
+      console.error("[v0] Error fetching extension requests:", err)
+      setError("Failed to fetch extension requests")
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { getExtensionRequests, extensionRequests, loading, error }
+}

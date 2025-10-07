@@ -1,0 +1,300 @@
+[
+  {
+    "name": "ZKVerifierImpl",
+    "type": "impl",
+    "interface_name": "spectralpay::interfaces::IZKVerifier"
+  },
+  {
+    "name": "spectralpay::interfaces::SkillLevel",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "Unknown",
+        "type": "()"
+      },
+      {
+        "name": "Beginner",
+        "type": "()"
+      },
+      {
+        "name": "Intermediate",
+        "type": "()"
+      },
+      {
+        "name": "Advanced",
+        "type": "()"
+      },
+      {
+        "name": "Expert",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ZKProofComponents",
+    "type": "struct",
+    "members": [
+      {
+        "name": "proof_a",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "proof_b",
+        "type": "((core::felt252, core::felt252), (core::felt252, core::felt252))"
+      },
+      {
+        "name": "proof_c",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "public_inputs",
+        "type": "(core::felt252, core::felt252, core::felt252, core::felt252)"
+      }
+    ]
+  },
+  {
+    "name": "core::bool",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "False",
+        "type": "()"
+      },
+      {
+        "name": "True",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::IZKVerifier",
+    "type": "interface",
+    "items": [
+      {
+        "name": "verify_skill_proof",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "skill_type_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "required_level",
+            "type": "spectralpay::interfaces::SkillLevel"
+          },
+          {
+            "name": "zk_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          },
+          {
+            "name": "verification_key",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "external"
+      },
+      {
+        "name": "verify_identity_proof",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "identity_commitment",
+            "type": "core::felt252"
+          },
+          {
+            "name": "zk_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "external"
+      },
+      {
+        "name": "add_verification_key",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "skill_type_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "verification_key",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "is_valid_verification_key",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "skill_type_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "verification_key",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "view"
+      }
+    ]
+  },
+  {
+    "name": "constructor",
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "identity_circuit_id",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::zk_verifier::ZKVerifier::SkillProofVerified",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "skill_type_hash",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "required_level",
+        "type": "spectralpay::interfaces::SkillLevel"
+      },
+      {
+        "kind": "data",
+        "name": "verifier_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::zk_verifier::ZKVerifier::IdentityProofVerified",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "identity_commitment",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::zk_verifier::ZKVerifier::VerificationKeyAdded",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "skill_type_hash",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "verification_key",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "added_by",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "name": "core::byte_array::ByteArray",
+    "type": "struct",
+    "members": [
+      {
+        "name": "data",
+        "type": "core::array::Array::<core::bytes_31::bytes31>"
+      },
+      {
+        "name": "pending_word",
+        "type": "core::felt252"
+      },
+      {
+        "name": "pending_word_len",
+        "type": "core::integer::u32"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::zk_verifier::ZKVerifier::ProofVerificationFailed",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "proof_type",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "reason",
+        "type": "core::byte_array::ByteArray"
+      }
+    ]
+  },
+  {
+    "kind": "enum",
+    "name": "spectralpay::zk_verifier::ZKVerifier::Event",
+    "type": "event",
+    "variants": [
+      {
+        "kind": "nested",
+        "name": "SkillProofVerified",
+        "type": "spectralpay::zk_verifier::ZKVerifier::SkillProofVerified"
+      },
+      {
+        "kind": "nested",
+        "name": "IdentityProofVerified",
+        "type": "spectralpay::zk_verifier::ZKVerifier::IdentityProofVerified"
+      },
+      {
+        "kind": "nested",
+        "name": "VerificationKeyAdded",
+        "type": "spectralpay::zk_verifier::ZKVerifier::VerificationKeyAdded"
+      },
+      {
+        "kind": "nested",
+        "name": "ProofVerificationFailed",
+        "type": "spectralpay::zk_verifier::ZKVerifier::ProofVerificationFailed"
+      }
+    ]
+  }
+]

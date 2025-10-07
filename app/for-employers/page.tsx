@@ -1,258 +1,432 @@
-import Link from "next/link"
+"use client"
+
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { PostJobDialog } from "@/components/post-job-dialog"
-import { Briefcase, Globe, Shield, Zap, CheckCircle2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { usePostJob, useGetApplications, useAssignJob, useApproveWork } from "@/hooks/use-job-marketplace"
+import { createMockZKProof } from "@/lib/starknet/contracts"
+import { 
+  Plus, 
+  Briefcase, 
+  Users, 
+  DollarSign, 
+  Clock, 
+  CheckCircle,
+  Eye,
+  UserCheck,
+  FileText,
+  TrendingUp
+} from "lucide-react"
 
 export default function ForEmployersPage() {
+  const { address, isConnected, connect } = useStarknetWallet()
+  const [activeTab, setActiveTab] = useState("jobs")
+  const [selectedJob, setSelectedJob] = useState<string | null>(null)
+
+  // Hooks
+  const { postJob, posting } = usePostJob()
+  const { getApplications, applications, loading: applicationsLoading } = useGetApplications(selectedJob || "")
+  const { assignJob, assigning } = useAssignJob()
+  const { approveWork, approving } = useApproveWork()
+
+  // Job posting form state
+  const [jobForm, setJobForm] = useState({
+    title: "",
+    description: "",
+    requiredSkills: "",
+    paymentAmount: "",
+    deadlineDays: 7,
+    paymentToken: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c7b05d8c4c4c4c4c4c4c4c" // ETH token address
+  })
+
+  // Mock jobs data
+  const [jobs, setJobs] = useState([
+    {
+      id: "1",
+      title: "Frontend Developer",
+      description: "Build responsive web applications using React and TypeScript",
+      payment: "2.5 ETH",
+      deadline: "7 days",
+      status: "Open",
+      applications: 3,
+      employer: address
+    },
+    {
+      id: "2",
+      title: "Smart Contract Developer", 
+      description: "Develop and audit smart contracts on Starknet",
+      payment: "5.0 ETH",
+      deadline: "14 days",
+      status: "Assigned",
+      applications: 5,
+      employer: address
+    }
+  ])
+
+  const handlePostJob = async () => {
+    if (!isConnected) {
+      await connect()
+      return
+    }
+
+    try {
+      const txHash = await postJob(
+        jobForm.title,
+        jobForm.description,
+        jobForm.requiredSkills,
+        jobForm.paymentAmount,
+        jobForm.deadlineDays,
+        jobForm.paymentToken
+      )
+      
+      if (txHash) {
+        alert("Job posted successfully! Transaction: " + txHash)
+        // Reset form
+        setJobForm({
+          title: "",
+          description: "",
+          requiredSkills: "",
+          paymentAmount: "",
+          deadlineDays: 7,
+          paymentToken: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c7b05d8c4c4c4c4c4c4c"
+        })
+      }
+    } catch (error) {
+      console.error("Job posting failed:", error)
+      alert("Failed to post job. Please try again.")
+    }
+  }
+
+  const handleAssignJob = async (jobId: string, workerPseudonym: string) => {
+    try {
+      const txHash = await assignJob(jobId, workerPseudonym, address || "")
+      if (txHash) {
+        alert("Job assigned successfully! Transaction: " + txHash)
+        // Update job status
+        setJobs(prev => prev.map(job => 
+          job.id === jobId ? { ...job, status: "Assigned" } : job
+        ))
+      }
+    } catch (error) {
+      console.error("Job assignment failed:", error)
+      alert("Failed to assign job.")
+    }
+  }
+
+  const handleApproveWork = async (jobId: string) => {
+    try {
+      const txHash = await approveWork(jobId)
+      if (txHash) {
+        alert("Work approved! Transaction: " + txHash)
+        // Update job status
+        setJobs(prev => prev.map(job => 
+          job.id === jobId ? { ...job, status: "Completed" } : job
+        ))
+      }
+    } catch (error) {
+      console.error("Work approval failed:", error)
+      alert("Failed to approve work.")
+    }
+  }
+
+  useEffect(() => {
+    if (selectedJob) {
+      getApplications(selectedJob)
+    }
+  }, [selectedJob])
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold">Hire Anonymously</h1>
+              <p className="text-xl text-muted-foreground">
+                Connect your wallet to start hiring skilled workers without bias
+              </p>
+            </div>
+            <Button size="lg" onClick={connect} className="bg-primary hover:bg-primary/90">
+              Connect Wallet
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 text-sm text-accent">
-              <Briefcase className="h-4 w-4" />
-              <span>For Employers</span>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl font-bold text-balance">
-              Hire <span className="text-accent">Global Talent</span>.
-              <br />
-              Zero <span className="text-primary">Liability</span>.
-            </h1>
-
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Access the best workers worldwide without storing sensitive data. Pay fairly based on skills, not
-              demographics.
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold">Employer Dashboard</h1>
+            <p className="text-muted-foreground">
+              Post jobs, review applications, and manage your workforce anonymously
             </p>
-
-            <div className="flex justify-center pt-4">
-              <PostJobDialog />
-            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Benefits */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <Card className="p-6 bg-card/50 backdrop-blur border-accent/30">
-              <Globe className="h-8 w-8 text-accent mb-4" />
-              <h3 className="font-bold mb-2">Global Talent Pool</h3>
-              <p className="text-sm text-muted-foreground">
-                Access skilled workers from anywhere without geographic restrictions.
-              </p>
-            </Card>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="jobs">Jobs</TabsTrigger>
+              <TabsTrigger value="post">Post Job</TabsTrigger>
+              <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
 
-            <Card className="p-6 bg-card/50 backdrop-blur border-accent/30">
-              <Shield className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-bold mb-2">Zero Data Liability</h3>
-              <p className="text-sm text-muted-foreground">No sensitive employee data to protect or manage.</p>
-            </Card>
-
-            <Card className="p-6 bg-card/50 backdrop-blur border-accent/30">
-              <Zap className="h-8 w-8 text-accent mb-4" />
-              <h3 className="font-bold mb-2">Automated Payments</h3>
-              <p className="text-sm text-muted-foreground">
-                Smart contracts handle escrow and payment release automatically.
-              </p>
-            </Card>
-
-            <Card className="p-6 bg-card/50 backdrop-blur border-accent/30">
-              <CheckCircle2 className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-bold mb-2">Bias-Free Hiring</h3>
-              <p className="text-sm text-muted-foreground">Evaluate candidates purely on skills and work quality.</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Job Posting Form */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            <Card className="p-8 bg-card/50 backdrop-blur border-accent/30">
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold">Post Your First Job</h2>
-                  <p className="text-muted-foreground">Find the perfect anonymous worker for your project</p>
-                </div>
-
-                <div className="text-center py-8">
-                  <PostJobDialog />
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Connect your Starknet wallet to post jobs and manage payments
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto space-y-12">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl font-bold">Simple Hiring Process</h2>
-              <p className="text-xl text-muted-foreground">From job posting to payment in 4 easy steps</p>
-            </div>
-
-            <div className="space-y-6">
-              <Card className="p-6 bg-card/50 backdrop-blur border-l-4 border-l-accent">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-                    1
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2">Post Job & Fund Escrow</h3>
-                    <p className="text-muted-foreground">
-                      Create your job listing with requirements and budget. Deposit payment into smart contract escrow
-                      for security.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-card/50 backdrop-blur border-l-4 border-l-accent">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2">Review Anonymous Applications</h3>
-                    <p className="text-muted-foreground">
-                      Evaluate candidates based on their pseudonymous reputation, skills, and portfolio. No personal
-                      data visible.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-card/50 backdrop-blur border-l-4 border-l-accent">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2">Worker Completes Task</h3>
-                    <p className="text-muted-foreground">
-                      Selected worker delivers the work according to specifications. Communicate through encrypted
-                      channels.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-card/50 backdrop-blur border-l-4 border-l-accent">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2">Verify & Auto-Release Payment</h3>
-                    <p className="text-muted-foreground">
-                      Review the deliverables. Once approved, smart contract automatically releases payment to the
-                      worker.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <Card className="p-12 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/30 backdrop-blur">
-              <div className="space-y-8">
-                <div className="text-center space-y-4">
-                  <h2 className="text-4xl font-bold">Why Employers Choose Us</h2>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Reduced Compliance Burden</h4>
-                      <p className="text-sm text-muted-foreground">No personal data means less regulatory overhead</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Quality-Based Selection</h4>
-                      <p className="text-sm text-muted-foreground">Hire based on skills and reputation only</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">No Payment Disputes</h4>
-                      <p className="text-sm text-muted-foreground">Smart contracts eliminate conflicts</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Audit-Ready Records</h4>
-                      <p className="text-sm text-muted-foreground">Tax compliant without sensitive data</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Global Talent Access</h4>
-                      <p className="text-sm text-muted-foreground">No geographic or demographic barriers</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Zero Platform Fees</h4>
-                      <p className="text-sm text-muted-foreground">Only blockchain transaction costs</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h2 className="text-4xl font-bold">
-              Ready to Hire <span className="text-accent">Anonymously</span>?
-            </h2>
-            <p className="text-xl text-muted-foreground">Post your first job and access global talent today</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <PostJobDialog />
-              <Link href="/how-it-works">
-                <Button size="lg" variant="outline" className="border-accent/50 hover:border-accent bg-transparent">
-                  Learn More
+            {/* Jobs Tab */}
+            <TabsContent value="jobs" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Your Jobs</h2>
+                <Button onClick={() => setActiveTab("post")} className="bg-primary hover:bg-primary/90">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Post New Job
                 </Button>
-              </Link>
-            </div>
-          </div>
+              </div>
+
+              <div className="grid gap-4">
+                {jobs.map((job) => (
+                  <Card key={job.id} className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-semibold">{job.title}</h3>
+                          <p className="text-muted-foreground">{job.description}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            {job.payment}
+                          </Badge>
+                          <Badge variant={job.status === "Open" ? "default" : "secondary"}>
+                            {job.status}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{job.deadline}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-4 h-4" />
+                          <span>{job.applications} applications</span>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedJob(job.id)
+                            setActiveTab("applications")
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View Applications
+                        </Button>
+                        {job.status === "Assigned" && (
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handleApproveWork(job.id)}
+                            disabled={approving}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve Work
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Post Job Tab */}
+            <TabsContent value="post" className="space-y-6">
+              <Card className="p-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold">Post a New Job</h2>
+                    <p className="text-muted-foreground">
+                      Create a job listing and find skilled workers
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Job Title</label>
+                      <input
+                        type="text"
+                        value={jobForm.title}
+                        onChange={(e) => setJobForm(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full mt-1 px-3 py-2 border rounded-md"
+                        placeholder="e.g., Frontend Developer"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Job Description</label>
+                      <textarea
+                        value={jobForm.description}
+                        onChange={(e) => setJobForm(prev => ({ ...prev, description: e.target.value }))}
+                        className="w-full mt-1 px-3 py-2 border rounded-md h-24"
+                        placeholder="Describe the work requirements and deliverables..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Required Skills</label>
+                      <input
+                        type="text"
+                        value={jobForm.requiredSkills}
+                        onChange={(e) => setJobForm(prev => ({ ...prev, requiredSkills: e.target.value }))}
+                        className="w-full mt-1 px-3 py-2 border rounded-md"
+                        placeholder="e.g., React, TypeScript, CSS"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Payment Amount (ETH)</label>
+                        <input
+                          type="number"
+                          value={jobForm.paymentAmount}
+                          onChange={(e) => setJobForm(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                          className="w-full mt-1 px-3 py-2 border rounded-md"
+                          placeholder="2.5"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Deadline (days)</label>
+                        <input
+                          type="number"
+                          value={jobForm.deadlineDays}
+                          onChange={(e) => setJobForm(prev => ({ ...prev, deadlineDays: parseInt(e.target.value) }))}
+                          className="w-full mt-1 px-3 py-2 border rounded-md"
+                          placeholder="7"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={handlePostJob} 
+                    disabled={posting}
+                    className="w-full bg-primary hover:bg-primary/90"
+                  >
+                    {posting ? "Posting Job..." : "Post Job"}
+                  </Button>
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Applications Tab */}
+            <TabsContent value="applications" className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Job Applications</h2>
+                {selectedJob ? (
+                  <p className="text-muted-foreground">
+                    Applications for Job #{selectedJob}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Select a job to view applications
+                  </p>
+                )}
+
+                {applicationsLoading ? (
+                  <p>Loading applications...</p>
+                ) : applications.length > 0 ? (
+                  <div className="space-y-4">
+                    {applications.map((application, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold">Worker: {application.worker_pseudonym}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Applied: {new Date(application.applied_at * 1000).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Badge variant="outline">
+                              {application.status === 1 ? "Pending" : "Reviewed"}
+                            </Badge>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View Proposal
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="bg-primary hover:bg-primary/90"
+                              onClick={() => handleAssignJob(selectedJob!, application.worker_pseudonym)}
+                              disabled={assigning}
+                            >
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              {assigning ? "Assigning..." : "Assign Job"}
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No applications yet</p>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="space-y-6">
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">Analytics & Insights</h2>
+                  <p className="text-muted-foreground">
+                    Track your hiring performance and platform usage
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Total Jobs Posted</p>
+                        <p className="text-2xl font-bold">{jobs.length}</p>
+                      </div>
+                      <Briefcase className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Total Applications</p>
+                        <p className="text-2xl font-bold">
+                          {jobs.reduce((sum, job) => sum + job.applications, 0)}
+                        </p>
+                      </div>
+                      <Users className="w-8 h-8 text-green-600" />
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Completed Jobs</p>
+                        <p className="text-2xl font-bold">
+                          {jobs.filter(job => job.status === "Completed").length}
+                        </p>
+                      </div>
+                      <CheckCircle className="w-8 h-8 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-      </section>
+      </div>
     </div>
   )
 }

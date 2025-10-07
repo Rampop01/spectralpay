@@ -1,0 +1,295 @@
+[
+  {
+    "name": "core::integer::u256",
+    "type": "struct",
+    "members": [
+      {
+        "name": "low",
+        "type": "core::integer::u128"
+      },
+      {
+        "name": "high",
+        "type": "core::integer::u128"
+      }
+    ]
+  },
+  {
+    "name": "constructor",
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "dispute_resolver",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "platform_fee_rate",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "fee_recipient",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "emergency_multisig",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::EscrowCreated",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "employer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "token",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::PaymentReleased",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_payout_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "platform_fee",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "name": "core::byte_array::ByteArray",
+    "type": "struct",
+    "members": [
+      {
+        "name": "data",
+        "type": "core::array::Array::<core::bytes_31::bytes31>"
+      },
+      {
+        "name": "pending_word",
+        "type": "core::felt252"
+      },
+      {
+        "name": "pending_word_len",
+        "type": "core::integer::u32"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::PaymentDisputed",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "disputer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "reason",
+        "type": "core::byte_array::ByteArray"
+      }
+    ]
+  },
+  {
+    "name": "core::bool",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "False",
+        "type": "()"
+      },
+      {
+        "name": "True",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::DisputeResolved",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "resolver",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "release_to_worker",
+        "type": "core::bool"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::PaymentRefunded",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "employer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::AutoReleaseTriggered",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_payout_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::escrow::Escrow::EmergencyRefund",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "employer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "enum",
+    "name": "spectralpay::escrow::Escrow::Event",
+    "type": "event",
+    "variants": [
+      {
+        "kind": "nested",
+        "name": "EscrowCreated",
+        "type": "spectralpay::escrow::Escrow::EscrowCreated"
+      },
+      {
+        "kind": "nested",
+        "name": "PaymentReleased",
+        "type": "spectralpay::escrow::Escrow::PaymentReleased"
+      },
+      {
+        "kind": "nested",
+        "name": "PaymentDisputed",
+        "type": "spectralpay::escrow::Escrow::PaymentDisputed"
+      },
+      {
+        "kind": "nested",
+        "name": "DisputeResolved",
+        "type": "spectralpay::escrow::Escrow::DisputeResolved"
+      },
+      {
+        "kind": "nested",
+        "name": "PaymentRefunded",
+        "type": "spectralpay::escrow::Escrow::PaymentRefunded"
+      },
+      {
+        "kind": "nested",
+        "name": "AutoReleaseTriggered",
+        "type": "spectralpay::escrow::Escrow::AutoReleaseTriggered"
+      },
+      {
+        "kind": "nested",
+        "name": "EmergencyRefund",
+        "type": "spectralpay::escrow::Escrow::EmergencyRefund"
+      }
+    ]
+  }
+]
