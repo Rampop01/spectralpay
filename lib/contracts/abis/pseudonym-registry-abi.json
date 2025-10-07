@@ -1,0 +1,546 @@
+[
+  {
+    "name": "PseudonymRegistryImpl",
+    "type": "impl",
+    "interface_name": "spectralpay::interfaces::IPseudonymRegistry"
+  },
+  {
+    "name": "core::integer::u256",
+    "type": "struct",
+    "members": [
+      {
+        "name": "low",
+        "type": "core::integer::u128"
+      },
+      {
+        "name": "high",
+        "type": "core::integer::u128"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::SkillLevel",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "Unknown",
+        "type": "()"
+      },
+      {
+        "name": "Beginner",
+        "type": "()"
+      },
+      {
+        "name": "Intermediate",
+        "type": "()"
+      },
+      {
+        "name": "Advanced",
+        "type": "()"
+      },
+      {
+        "name": "Expert",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ZKProofComponents",
+    "type": "struct",
+    "members": [
+      {
+        "name": "proof_a",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "proof_b",
+        "type": "((core::felt252, core::felt252), (core::felt252, core::felt252))"
+      },
+      {
+        "name": "proof_c",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "public_inputs",
+        "type": "(core::felt252, core::felt252, core::felt252, core::felt252)"
+      }
+    ]
+  },
+  {
+    "name": "core::bool",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "False",
+        "type": "()"
+      },
+      {
+        "name": "True",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::WorkerProfile",
+    "type": "struct",
+    "members": [
+      {
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "name": "owner_commitment",
+        "type": "core::felt252"
+      },
+      {
+        "name": "skills_commitment",
+        "type": "core::felt252"
+      },
+      {
+        "name": "reputation_score",
+        "type": "core::integer::u32"
+      },
+      {
+        "name": "completed_jobs",
+        "type": "core::integer::u32"
+      },
+      {
+        "name": "total_earnings",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "registration_timestamp",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "reputation_bond",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "is_active",
+        "type": "core::bool"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::SkillProof",
+    "type": "struct",
+    "members": [
+      {
+        "name": "skill_type_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "skill_level",
+        "type": "spectralpay::interfaces::SkillLevel"
+      },
+      {
+        "name": "proof_data",
+        "type": "(core::felt252, core::felt252, core::felt252, core::felt252)"
+      },
+      {
+        "name": "verification_key",
+        "type": "core::felt252"
+      },
+      {
+        "name": "proof_timestamp",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "is_verified",
+        "type": "core::bool"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::IPseudonymRegistry",
+    "type": "interface",
+    "items": [
+      {
+        "name": "register_pseudonym",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "identity_commitment",
+            "type": "core::felt252"
+          },
+          {
+            "name": "skills_commitment",
+            "type": "core::felt252"
+          },
+          {
+            "name": "reputation_bond",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "add_skill_proof",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "skill_type_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "skill_level",
+            "type": "spectralpay::interfaces::SkillLevel"
+          },
+          {
+            "name": "zk_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          },
+          {
+            "name": "verification_key",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "verify_skill_requirement",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "required_skill_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "zk_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "external"
+      },
+      {
+        "name": "update_reputation",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "score_delta",
+            "type": "core::integer::i32"
+          },
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "prove_pseudonym_ownership",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "ownership_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "external"
+      },
+      {
+        "name": "get_worker_profile",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "spectralpay::interfaces::WorkerProfile"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "is_pseudonym_registered",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "get_skill_proofs",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "pseudonym",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<spectralpay::interfaces::SkillProof>"
+          }
+        ],
+        "state_mutability": "view"
+      }
+    ]
+  },
+  {
+    "name": "constructor",
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "reputation_bond_token",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "min_reputation_bond",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "zk_verifier_contract",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::PseudonymRegistered",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "registration_timestamp",
+        "type": "core::integer::u64"
+      },
+      {
+        "kind": "data",
+        "name": "initial_reputation",
+        "type": "core::integer::u32"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillProofAdded",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "key",
+        "name": "skill_type_hash",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "skill_level",
+        "type": "spectralpay::interfaces::SkillLevel"
+      },
+      {
+        "kind": "data",
+        "name": "proof_timestamp",
+        "type": "core::integer::u64"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillVerified",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "key",
+        "name": "skill_type_hash",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "verifier",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "verification_timestamp",
+        "type": "core::integer::u64"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::ReputationUpdated",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "old_score",
+        "type": "core::integer::u32"
+      },
+      {
+        "kind": "data",
+        "name": "new_score",
+        "type": "core::integer::u32"
+      },
+      {
+        "kind": "data",
+        "name": "score_delta",
+        "type": "core::integer::i32"
+      },
+      {
+        "kind": "data",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "updated_by",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::PseudonymRecovered",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "recovery_timestamp",
+        "type": "core::integer::u64"
+      },
+      {
+        "kind": "data",
+        "name": "new_owner",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillRequirementVerified",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "key",
+        "name": "required_skill_hash",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "verification_success",
+        "type": "core::bool"
+      },
+      {
+        "kind": "data",
+        "name": "timestamp",
+        "type": "core::integer::u64"
+      }
+    ]
+  },
+  {
+    "kind": "enum",
+    "name": "spectralpay::pseudonym_registry::PseudonymRegistry::Event",
+    "type": "event",
+    "variants": [
+      {
+        "kind": "nested",
+        "name": "PseudonymRegistered",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::PseudonymRegistered"
+      },
+      {
+        "kind": "nested",
+        "name": "SkillProofAdded",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillProofAdded"
+      },
+      {
+        "kind": "nested",
+        "name": "SkillVerified",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillVerified"
+      },
+      {
+        "kind": "nested",
+        "name": "ReputationUpdated",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::ReputationUpdated"
+      },
+      {
+        "kind": "nested",
+        "name": "PseudonymRecovered",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::PseudonymRecovered"
+      },
+      {
+        "kind": "nested",
+        "name": "SkillRequirementVerified",
+        "type": "spectralpay::pseudonym_registry::PseudonymRegistry::SkillRequirementVerified"
+      }
+    ]
+  }
+]

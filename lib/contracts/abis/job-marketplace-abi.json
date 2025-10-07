@@ -1,0 +1,771 @@
+[
+  {
+    "name": "JobMarketplaceImpl",
+    "type": "impl",
+    "interface_name": "spectralpay::interfaces::IJobMarketplace"
+  },
+  {
+    "name": "core::byte_array::ByteArray",
+    "type": "struct",
+    "members": [
+      {
+        "name": "data",
+        "type": "core::array::Array::<core::bytes_31::bytes31>"
+      },
+      {
+        "name": "pending_word",
+        "type": "core::felt252"
+      },
+      {
+        "name": "pending_word_len",
+        "type": "core::integer::u32"
+      }
+    ]
+  },
+  {
+    "name": "core::integer::u256",
+    "type": "struct",
+    "members": [
+      {
+        "name": "low",
+        "type": "core::integer::u128"
+      },
+      {
+        "name": "high",
+        "type": "core::integer::u128"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ZKProofComponents",
+    "type": "struct",
+    "members": [
+      {
+        "name": "proof_a",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "proof_b",
+        "type": "((core::felt252, core::felt252), (core::felt252, core::felt252))"
+      },
+      {
+        "name": "proof_c",
+        "type": "(core::felt252, core::felt252)"
+      },
+      {
+        "name": "public_inputs",
+        "type": "(core::felt252, core::felt252, core::felt252, core::felt252)"
+      }
+    ]
+  },
+  {
+    "name": "core::bool",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "False",
+        "type": "()"
+      },
+      {
+        "name": "True",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::JobStatus",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "Unknown",
+        "type": "()"
+      },
+      {
+        "name": "Open",
+        "type": "()"
+      },
+      {
+        "name": "Assigned",
+        "type": "()"
+      },
+      {
+        "name": "Submitted",
+        "type": "()"
+      },
+      {
+        "name": "Completed",
+        "type": "()"
+      },
+      {
+        "name": "Disputed",
+        "type": "()"
+      },
+      {
+        "name": "Cancelled",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::JobDetails",
+    "type": "struct",
+    "members": [
+      {
+        "name": "id",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "employer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "title",
+        "type": "core::byte_array::ByteArray"
+      },
+      {
+        "name": "description",
+        "type": "core::byte_array::ByteArray"
+      },
+      {
+        "name": "required_skills_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "payment_amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "payment_token",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "work_deadline_days",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "work_deadline",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "status",
+        "type": "spectralpay::interfaces::JobStatus"
+      },
+      {
+        "name": "assigned_worker",
+        "type": "core::felt252"
+      },
+      {
+        "name": "created_at",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "assigned_at",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ApplicationStatus",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "Unknown",
+        "type": "()"
+      },
+      {
+        "name": "Pending",
+        "type": "()"
+      },
+      {
+        "name": "Accepted",
+        "type": "()"
+      },
+      {
+        "name": "Rejected",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::WorkerApplication",
+    "type": "struct",
+    "members": [
+      {
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "name": "skill_proof_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "proposal_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "applied_at",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "status",
+        "type": "spectralpay::interfaces::ApplicationStatus"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ExtensionRequestStatus",
+    "type": "enum",
+    "variants": [
+      {
+        "name": "Unknown",
+        "type": "()"
+      },
+      {
+        "name": "Pending",
+        "type": "()"
+      },
+      {
+        "name": "Approved",
+        "type": "()"
+      },
+      {
+        "name": "Rejected",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::ExtensionRequest",
+    "type": "struct",
+    "members": [
+      {
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "name": "requested_days",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "reason",
+        "type": "core::byte_array::ByteArray"
+      },
+      {
+        "name": "requested_at",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "status",
+        "type": "spectralpay::interfaces::ExtensionRequestStatus"
+      },
+      {
+        "name": "employer_response",
+        "type": "core::byte_array::ByteArray"
+      },
+      {
+        "name": "responded_at",
+        "type": "core::integer::u64"
+      }
+    ]
+  },
+  {
+    "name": "spectralpay::interfaces::IJobMarketplace",
+    "type": "interface",
+    "items": [
+      {
+        "name": "post_job",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_title",
+            "type": "core::byte_array::ByteArray"
+          },
+          {
+            "name": "job_description",
+            "type": "core::byte_array::ByteArray"
+          },
+          {
+            "name": "required_skills_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "payment_amount",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "work_deadline_days",
+            "type": "core::integer::u64"
+          },
+          {
+            "name": "payment_token",
+            "type": "core::starknet::contract_address::ContractAddress"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::integer::u256"
+          }
+        ],
+        "state_mutability": "external"
+      },
+      {
+        "name": "apply_for_job",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "worker_pseudonym",
+            "type": "core::felt252"
+          },
+          {
+            "name": "skill_zk_proof",
+            "type": "spectralpay::interfaces::ZKProofComponents"
+          },
+          {
+            "name": "proposal_hash",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "assign_job",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "selected_worker",
+            "type": "core::felt252"
+          },
+          {
+            "name": "worker_payout_address",
+            "type": "core::starknet::contract_address::ContractAddress"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "submit_work",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "work_proof_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "submission_uri",
+            "type": "core::byte_array::ByteArray"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "approve_work",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "dispute_work",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "reason",
+            "type": "core::byte_array::ByteArray"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "extend_deadline",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "additional_days",
+            "type": "core::integer::u64"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "request_deadline_extension",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "requested_days",
+            "type": "core::integer::u64"
+          },
+          {
+            "name": "reason",
+            "type": "core::byte_array::ByteArray"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "respond_to_extension_request",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "approve",
+            "type": "core::bool"
+          },
+          {
+            "name": "response",
+            "type": "core::byte_array::ByteArray"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "get_job_details",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "spectralpay::interfaces::JobDetails"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "get_worker_applications",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<spectralpay::interfaces::WorkerApplication>"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "get_extension_requests",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "job_id",
+            "type": "core::integer::u256"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<spectralpay::interfaces::ExtensionRequest>"
+          }
+        ],
+        "state_mutability": "view"
+      }
+    ]
+  },
+  {
+    "name": "constructor",
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "pseudonym_registry",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "escrow_contract",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "platform_fee_rate",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "fee_recipient",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::JobPosted",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "employer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "kind": "data",
+        "name": "title",
+        "type": "core::byte_array::ByteArray"
+      },
+      {
+        "kind": "data",
+        "name": "payment_amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::ApplicationSubmitted",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "proposal_hash",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::WorkerSelected",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "escrow_id",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::WorkSubmitted",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::JobCompleted",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "payment_amount",
+        "type": "core::integer::u256"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::JobDisputed",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "reason",
+        "type": "core::byte_array::ByteArray"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::ExtensionRequested",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "requested_days",
+        "type": "core::integer::u64"
+      },
+      {
+        "kind": "data",
+        "name": "reason",
+        "type": "core::byte_array::ByteArray"
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "spectralpay::job_marketplace::JobMarketplace::ExtensionResponded",
+    "type": "event",
+    "members": [
+      {
+        "kind": "key",
+        "name": "job_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "kind": "data",
+        "name": "worker_pseudonym",
+        "type": "core::felt252"
+      },
+      {
+        "kind": "data",
+        "name": "approved",
+        "type": "core::bool"
+      },
+      {
+        "kind": "data",
+        "name": "response",
+        "type": "core::byte_array::ByteArray"
+      }
+    ]
+  },
+  {
+    "kind": "enum",
+    "name": "spectralpay::job_marketplace::JobMarketplace::Event",
+    "type": "event",
+    "variants": [
+      {
+        "kind": "nested",
+        "name": "JobPosted",
+        "type": "spectralpay::job_marketplace::JobMarketplace::JobPosted"
+      },
+      {
+        "kind": "nested",
+        "name": "ApplicationSubmitted",
+        "type": "spectralpay::job_marketplace::JobMarketplace::ApplicationSubmitted"
+      },
+      {
+        "kind": "nested",
+        "name": "WorkerSelected",
+        "type": "spectralpay::job_marketplace::JobMarketplace::WorkerSelected"
+      },
+      {
+        "kind": "nested",
+        "name": "WorkSubmitted",
+        "type": "spectralpay::job_marketplace::JobMarketplace::WorkSubmitted"
+      },
+      {
+        "kind": "nested",
+        "name": "JobCompleted",
+        "type": "spectralpay::job_marketplace::JobMarketplace::JobCompleted"
+      },
+      {
+        "kind": "nested",
+        "name": "JobDisputed",
+        "type": "spectralpay::job_marketplace::JobMarketplace::JobDisputed"
+      },
+      {
+        "kind": "nested",
+        "name": "ExtensionRequested",
+        "type": "spectralpay::job_marketplace::JobMarketplace::ExtensionRequested"
+      },
+      {
+        "kind": "nested",
+        "name": "ExtensionResponded",
+        "type": "spectralpay::job_marketplace::JobMarketplace::ExtensionResponded"
+      }
+    ]
+  }
+]
