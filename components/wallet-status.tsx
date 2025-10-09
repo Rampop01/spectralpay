@@ -1,12 +1,12 @@
 "use client"
 
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, XCircle, Wallet } from "lucide-react"
 
 export function WalletStatus() {
-  const { address, isConnected } = useStarknetWallet()
+  const { address, isConnected } = useAccount()
 
   if (!isConnected) {
     return (

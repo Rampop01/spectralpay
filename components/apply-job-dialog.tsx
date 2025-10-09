@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Send, Loader2 } from "lucide-react"
 import { useApplyForJob } from "@/hooks/use-job-marketplace"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
 import { createMockZKProof } from "@/lib/starknet/contracts"
 
 interface ApplyJobDialogProps {
@@ -26,7 +26,7 @@ interface ApplyJobDialogProps {
 }
 
 export function ApplyJobDialog({ jobId, jobTitle }: ApplyJobDialogProps) {
-  const { isConnected } = useStarknetWallet()
+  const { isConnected } = useAccount()
   const { applyForJob, applying, error } = useApplyForJob()
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState({

@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
+import { WalletConnectButton } from "@/components/wallet-connector"
 import { useVerifySkillProof, useVerifyIdentityProof, useAddVerificationKey } from "@/hooks/use-zk-verifier"
 import { createMockZKProof, SkillLevel } from "@/lib/starknet/contracts"
 import { 
@@ -23,7 +24,7 @@ import {
 } from "lucide-react"
 
 export default function ZKVerificationPage() {
-  const { address, isConnected, connect } = useStarknetWallet()
+  const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState("verify")
   const [verificationResults, setVerificationResults] = useState<{
     skillProof: boolean | null
@@ -56,8 +57,8 @@ export default function ZKVerificationPage() {
   })
 
   const handleVerifySkillProof = async () => {
-    if (!isConnected) {
-      await connect()
+    if (!isConnected || !address) {
+      alert("Please connect your wallet first to verify skill proof.")
       return
     }
 
@@ -84,8 +85,8 @@ export default function ZKVerificationPage() {
   }
 
   const handleVerifyIdentityProof = async () => {
-    if (!isConnected) {
-      await connect()
+    if (!isConnected || !address) {
+      alert("Please connect your wallet first to verify identity proof.")
       return
     }
 
@@ -111,8 +112,8 @@ export default function ZKVerificationPage() {
   }
 
   const handleAddVerificationKey = async () => {
-    if (!isConnected) {
-      await connect()
+    if (!isConnected || !address) {
+      alert("Please connect your wallet first to add verification key.")
       return
     }
 
@@ -144,9 +145,7 @@ export default function ZKVerificationPage() {
                 Connect your wallet to verify zero-knowledge proofs
               </p>
             </div>
-            <Button size="lg" onClick={connect} className="bg-primary hover:bg-primary/90">
-              Connect Wallet
-            </Button>
+            <WalletConnectButton />
           </div>
         </div>
       </div>

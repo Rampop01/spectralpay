@@ -17,10 +17,10 @@ import {
 } from "@/components/ui/dialog"
 import { Briefcase, Loader2 } from "lucide-react"
 import { usePostJob } from "@/hooks/use-job-marketplace"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
 
 export function PostJobDialog() {
-  const { isConnected } = useStarknetWallet()
+  const { isConnected } = useAccount()
   const { postJob, posting, error } = usePostJob()
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState({

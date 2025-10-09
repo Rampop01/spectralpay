@@ -3,12 +3,13 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Shield, Wallet, Menu, X, ExternalLink } from "lucide-react"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { Shield, Menu, X, ExternalLink } from "lucide-react"
+import { useAccount } from "@starknet-react/core"
+import { WalletConnectButton } from "./wallet-connector"
 import { formatAddress, getExplorerUrl } from "@/lib/starknet/config"
 
 export function Navigation() {
-  const { address, isConnected, isConnecting, connect, disconnect } = useStarknetWallet()
+  const { address, isConnected } = useAccount()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -49,36 +50,23 @@ export function Navigation() {
 
           {/* Wallet Connection */}
           <div className="hidden md:flex items-center gap-4">
-            {isConnected ? (
-              <>
-                <Link href="/dashboard">
-                  <Button variant="outline" className="border-primary/50 hover:border-primary bg-transparent">
-                    Dashboard
-                  </Button>
-                </Link>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => window.open(getExplorerUrl(address!), "_blank")}
-                    className="bg-primary hover:bg-primary/90 glow-blue-sm"
-                  >
-                    <Wallet className="mr-2 h-4 w-4" />
-                    {formatAddress(address!)}
-                    <ExternalLink className="ml-2 h-3 w-3" />
-                  </Button>
-                  <Button
-                    onClick={disconnect}
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500/50 hover:border-red-500 text-red-500 bg-transparent"
-                  >
-                    Disconnect
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Button onClick={connect} disabled={isConnecting} className="bg-primary hover:bg-primary/90 glow-blue-sm">
-                <Wallet className="mr-2 h-4 w-4" />
-                {isConnecting ? "Connecting..." : "Connect Wallet"}
+            {isConnected && (
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-primary/50 hover:border-primary bg-transparent">
+                  Dashboard
+                </Button>
+              </Link>
+            )}
+            <WalletConnectButton />
+            {isConnected && (
+              <Button
+                onClick={() => window.open(getExplorerUrl(address!), "_blank")}
+                variant="outline"
+                size="sm"
+                className="border-primary/50 hover:border-primary"
+                title="View on Explorer"
+              >
+                <ExternalLink className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -107,25 +95,25 @@ export function Navigation() {
             <Link href="/zk-verification" className="block text-sm text-muted-foreground hover:text-foreground">
               ZK Verification
             </Link>
-            {isConnected ? (
-              <div className="space-y-2">
-                <Button onClick={() => window.open(getExplorerUrl(address!), "_blank")} className="w-full">
-                  <Wallet className="mr-2 h-4 w-4" />
-                  {formatAddress(address!)}
-                </Button>
+            <div className="pt-2">
+              <WalletConnectButton />
+            </div>
+            {isConnected && (
+              <div className="pt-2">
+                <Link href="/dashboard">
+                  <Button variant="outline" className="w-full mb-2">
+                    Dashboard
+                  </Button>
+                </Link>
                 <Button
-                  onClick={disconnect}
+                  onClick={() => window.open(getExplorerUrl(address!), "_blank")}
                   variant="outline"
-                  className="w-full border-red-500/50 text-red-500 bg-transparent"
+                  className="w-full"
                 >
-                  Disconnect
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  View on Explorer
                 </Button>
               </div>
-            ) : (
-              <Button onClick={connect} disabled={isConnecting} className="w-full bg-primary hover:bg-primary/90">
-                <Wallet className="mr-2 h-4 w-4" />
-                {isConnecting ? "Connecting..." : "Connect Wallet"}
-              </Button>
             )}
           </div>
         )}
