@@ -1,21 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useEscrowContract } from "./use-contracts"
 import { EscrowContract } from "@/lib/starknet/contracts"
 
 export function useEscrow() {
-  const { account, isConnected } = useStarknetWallet()
-  const [contract, setContract] = useState<EscrowContract | null>(null)
-
-  useEffect(() => {
-    if (isConnected && account) {
-      setContract(new EscrowContract(account))
-    } else {
-      setContract(null)
-    }
-  }, [account, isConnected])
-
+  const { contract, isConnected } = useEscrowContract()
   return contract
 }
 
@@ -57,7 +47,7 @@ export function useReleasePayment() {
   const [releasing, setReleasing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const releasePayment = async (escrowId: string) => {
+  const releasePayment = async (escrowId: string, workerPayoutAddress: string) => {
     if (!contract) {
       setError("Wallet not connected")
       return null
@@ -66,7 +56,7 @@ export function useReleasePayment() {
     setReleasing(true)
     setError(null)
     try {
-      const txHash = await contract.releasePayment(escrowId)
+      const txHash = await contract.releasePayment(escrowId, workerPayoutAddress)
       return txHash
     } catch (err) {
       console.error("[v0] Error releasing payment:", err)

@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/dialog"
 import { UserPlus, Loader2 } from "lucide-react"
 import { useRegisterPseudonym } from "@/hooks/use-pseudonym-registry"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
 
 export function RegisterPseudonymDialog() {
-  const { isConnected } = useStarknetWallet()
+  const { isConnected } = useAccount()
   const { registerPseudonym, registering, error } = useRegisterPseudonym()
   const [open, setOpen] = useState(false)
   const [pseudonym, setPseudonym] = useState("")

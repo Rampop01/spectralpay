@@ -1,15 +1,70 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Briefcase, DollarSign, Clock, CheckCircle2, Star, TrendingUp, Shield, Eye, FileText } from "lucide-react"
+import { useAccount } from "@starknet-react/core"
+import { WalletConnectButton } from "@/components/wallet-connector"
+import { useWorkerProfile } from "@/hooks/use-skill-verification"
+import { useWorkSubmission } from "@/hooks/use-work-submission"
+import { useRequestExtension } from "@/hooks/use-job-marketplace"
+import { WorkerProfile, PseudonymRegistryContract } from "@/lib/starknet/contracts"
+import { ContractVerification } from "@/components/contract-verification"
+import { User, Briefcase, DollarSign, Clock, CheckCircle2, Star, TrendingUp, Shield, Eye, FileText, Send, Calendar } from "lucide-react"
 
 export default function DashboardPage() {
+  const { address, isConnected } = useAccount()
   const [userType] = useState<"worker" | "employer">("worker")
+  const [pseudonym, setPseudonym] = useState("")
+  const [profile, setProfile] = useState<WorkerProfile | null>(null)
+  
+  // Hooks
+  const { getWorkerProfile, loading: profileLoading } = useWorkerProfile()
+  const { submitWork, submitting } = useWorkSubmission()
+  const { requestExtension, requesting } = useRequestExtension()
+
+  // Load worker profile
+  const loadProfile = async () => {
+    if (!pseudonym) return
+    
+    try {
+      const profileData = await getWorkerProfile(pseudonym)
+      setProfile(profileData)
+    } catch (error) {
+      console.error("Failed to load profile:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (pseudonym) {
+      loadProfile()
+    }
+  }, [pseudonym])
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold">Worker Dashboard</h1>
+              <p className="text-xl text-muted-foreground">
+                Connect your wallet to access your dashboard
+              </p>
+            </div>
+            <WalletConnectButton />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,13 +78,30 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <h1 className="text-4xl font-bold">Dashboard</h1>
                 <p className="text-muted-foreground">
-                  Welcome back, <span className="text-primary font-mono">CryptoNinja_4829</span>
+                  Welcome back, <span className="text-primary font-mono">
+                    {profile?.pseudonym || pseudonym || "Anonymous Worker"}
+                  </span>
                 </p>
               </div>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Eye className="mr-2 h-4 w-4" />
-                View Public Profile
-              </Button>
+              <div className="space-x-2">
+                {!profile && (
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Enter your pseudonym..."
+                      value={pseudonym}
+                      onChange={(e) => setPseudonym(e.target.value)}
+                      className="w-64"
+                    />
+                    <Button onClick={loadProfile} disabled={!pseudonym || profileLoading}>
+                      {profileLoading ? "Loading..." : "Load Profile"}
+                    </Button>
+                  </div>
+                )}
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Public Profile
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -42,7 +114,7 @@ export default function DashboardPage() {
                 </div>
                 <TrendingUp className="h-4 w-4 text-green-500" />
               </div>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{profile?.completed_jobs || 0}</div>
               <div className="text-sm text-muted-foreground">Jobs Completed</div>
             </Card>
 
@@ -53,7 +125,9 @@ export default function DashboardPage() {
                 </div>
                 <TrendingUp className="h-4 w-4 text-green-500" />
               </div>
-              <div className="text-2xl font-bold">$24,500</div>
+              <div className="text-2xl font-bold">
+                {profile ? `${(parseFloat(profile.total_earnings) / Math.pow(10, 18)).toFixed(2)} ETH` : "$0"}
+              </div>
               <div className="text-sm text-muted-foreground">Total Earned</div>
             </Card>
 
@@ -63,7 +137,7 @@ export default function DashboardPage() {
                   <Star className="h-5 w-5 text-primary" />
                 </div>
               </div>
-              <div className="text-2xl font-bold">4.9</div>
+              <div className="text-2xl font-bold">{profile?.reputation_score || 0}</div>
               <div className="text-sm text-muted-foreground">Reputation Score</div>
             </Card>
 
@@ -83,7 +157,9 @@ export default function DashboardPage() {
             <TabsList className="bg-card/50 border border-border/50">
               <TabsTrigger value="active">Active Jobs</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="submit">Submit Work</TabsTrigger>
+              <TabsTrigger value="extensions">Extensions</TabsTrigger>
+              <TabsTrigger value="debug">Debug</TabsTrigger>
               <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
 
@@ -207,6 +283,121 @@ export default function DashboardPage() {
               ))}
             </TabsContent>
 
+            <TabsContent value="submit" className="space-y-4">
+              <Card className="p-6 bg-card/50 backdrop-blur border-primary/30">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Submit Work</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="jobId">Job ID</Label>
+                      <Input
+                        id="jobId"
+                        placeholder="Enter job ID..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="workDescription">Work Description</Label>
+                      <Textarea
+                        id="workDescription"
+                        placeholder="Describe the work you've completed..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="submissionUrl">Submission URL</Label>
+                      <Input
+                        id="submissionUrl"
+                        placeholder="https://... or ipfs://..."
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        const jobId = (document.getElementById("jobId") as HTMLInputElement)?.value
+                        const description = (document.getElementById("workDescription") as HTMLTextAreaElement)?.value
+                        const url = (document.getElementById("submissionUrl") as HTMLInputElement)?.value
+                        if (jobId && url) {
+                          submitWork(jobId, "0x" + Math.random().toString(16).slice(2, 66).padStart(64, '0'), url)
+                            .then(txHash => {
+                              if (txHash) {
+                                alert("Work submitted successfully! Transaction: " + txHash)
+                                // Clear form
+                                ;(document.getElementById("jobId") as HTMLInputElement).value = ""
+                                ;(document.getElementById("workDescription") as HTMLTextAreaElement).value = ""
+                                ;(document.getElementById("submissionUrl") as HTMLInputElement).value = ""
+                              }
+                            })
+                        } else {
+                          alert("Please fill in all required fields")
+                        }
+                      }}
+                      disabled={submitting}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      {submitting ? "Submitting..." : "Submit Work"}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="extensions" className="space-y-4">
+              <Card className="p-6 bg-card/50 backdrop-blur border-primary/30">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Request Deadline Extension</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="extJobId">Job ID</Label>
+                      <Input
+                        id="extJobId"
+                        placeholder="Enter job ID..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="requestedDays">Requested Days</Label>
+                      <Input
+                        id="requestedDays"
+                        type="number"
+                        placeholder="Number of additional days..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="extensionReason">Reason</Label>
+                      <Textarea
+                        id="extensionReason"
+                        placeholder="Explain why you need an extension..."
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        const jobId = (document.getElementById("extJobId") as HTMLInputElement)?.value
+                        const days = parseInt((document.getElementById("requestedDays") as HTMLInputElement)?.value || "0")
+                        const reason = (document.getElementById("extensionReason") as HTMLTextAreaElement)?.value
+                        if (jobId && days > 0 && reason) {
+                          requestExtension(jobId, days, reason)
+                            .then(txHash => {
+                              if (txHash) {
+                                alert("Extension request submitted! Transaction: " + txHash)
+                                // Clear form
+                                ;(document.getElementById("extJobId") as HTMLInputElement).value = ""
+                                ;(document.getElementById("requestedDays") as HTMLInputElement).value = ""
+                                ;(document.getElementById("extensionReason") as HTMLTextAreaElement).value = ""
+                              }
+                            })
+                        } else {
+                          alert("Please fill in all required fields")
+                        }
+                      }}
+                      disabled={requesting}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {requesting ? "Requesting..." : "Request Extension"}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="applications" className="space-y-4">
               <Card className="p-6 bg-card/50 backdrop-blur">
                 <div className="text-center py-12 space-y-4">
@@ -220,60 +411,80 @@ export default function DashboardPage() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="debug" className="space-y-4">
+              <ContractVerification />
+            </TabsContent>
+
             <TabsContent value="profile" className="space-y-6">
               <Card className="p-6 bg-card/50 backdrop-blur border-primary/30">
                 <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
-                      <User className="h-10 w-10 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+                        <User className="h-10 w-10 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold font-mono">
+                          {profile?.pseudonym || pseudonym || "Anonymous Worker"}
+                        </h3>
+                        <p className="text-muted-foreground">
+                          {profile?.is_active ? "Active Worker" : "Inactive Worker"}
+                        </p>
+                      </div>
+                      <Button variant="outline" className="border-primary/50 bg-transparent">
+                        Edit Profile
+                      </Button>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold font-mono">CryptoNinja_4829</h3>
-                      <p className="text-muted-foreground">Anonymous Worker</p>
-                    </div>
-                    <Button variant="outline" className="border-primary/50 bg-transparent">
-                      Edit Profile
-                    </Button>
-                  </div>
 
-                  <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-border/50">
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Member Since</div>
-                      <div className="font-semibold">Dec 2024</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Reputation</div>
-                      <div className="font-semibold flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                        4.9 / 5.0
+                    <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-border/50">
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">Member Since</div>
+                        <div className="font-semibold">
+                          {profile 
+                            ? new Date(profile.registration_timestamp * 1000).toLocaleDateString()
+                            : "Not Registered"
+                          }
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">Reputation</div>
+                        <div className="font-semibold flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          {profile?.reputation_score || 0} / 1000
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">Success Rate</div>
+                        <div className="font-semibold">
+                          {profile?.completed_jobs ? "100%" : "No jobs yet"}
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Success Rate</div>
-                      <div className="font-semibold">100%</div>
-                    </div>
-                  </div>
 
-                  <div className="space-y-3 pt-4 border-t border-border/50">
-                    <h4 className="font-semibold">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {["Solidity", "Cairo", "Smart Contract Auditing", "Security", "Starknet"].map((skill) => (
-                        <Badge key={skill} variant="secondary" className="bg-primary/10 text-primary border-primary/30">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-border/50">
-                    <h4 className="font-semibold">Bio</h4>
-                    <p className="text-muted-foreground">
-                      Experienced smart contract auditor specializing in DeFi protocols and zero-knowledge proof
-                      systems. 5+ years in blockchain security with focus on Starknet ecosystem.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                    {profile && (
+                      <div className="space-y-3 pt-4 border-t border-border/50">
+                        <h4 className="font-semibold">Profile Details</h4>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="font-medium">Owner Commitment:</span>
+                            <p className="text-xs text-muted-foreground font-mono break-all">
+                              {profile.owner_commitment}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Skills Commitment:</span>
+                            <p className="text-xs text-muted-foreground font-mono break-all">
+                              {profile.skills_commitment}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Reputation Bond:</span>
+                            <span className="ml-2">
+                              {(parseFloat(profile.reputation_bond) / Math.pow(10, 18)).toFixed(4)} ETH
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}                  <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/30">
                     <Shield className="h-5 w-5 text-primary flex-shrink-0" />
                     <div className="text-sm">
                       <p className="font-semibold mb-1">Privacy Protected</p>

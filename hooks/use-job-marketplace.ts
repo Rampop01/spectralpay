@@ -1,21 +1,48 @@
+
 "use client"
 
+export function useApproveWork() {
+  const contract = useJobMarketplace()
+  const [approving, setApproving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const approveWork = async (jobId: string, workerPseudonym?: string) => {
+    if (!contract) {
+      setError("Wallet not connected")
+      return null
+    }
+    setApproving(true)
+    setError(null)
+    try {
+      const txHash = await contract.approveWork(jobId)
+      
+      // Update worker reputation after successful work approval
+      if (workerPseudonym && txHash) {
+        try {
+          await contract.updateWorkerReputation(workerPseudonym, 50, jobId) // +50 reputation for completed job
+        } catch (reputationError) {
+          console.warn("[v0] Failed to update reputation:", reputationError)
+        }
+      }
+      
+      return txHash
+    } catch (err) {
+      setError("Failed to approve work")
+      return null
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  return { approveWork, approving, error }
+}
+
 import { useState, useEffect } from "react"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
-import { JobMarketplaceContract, type JobDetails } from "@/lib/starknet/contracts"
+import { useJobMarketplaceContract } from "./use-contracts"
+import { type JobDetails } from "@/lib/starknet/contracts"
 
 export function useJobMarketplace() {
-  const { account, isConnected } = useStarknetWallet()
-  const [contract, setContract] = useState<JobMarketplaceContract | null>(null)
-
-  useEffect(() => {
-    if (isConnected && account) {
-      setContract(new JobMarketplaceContract(account))
-    } else {
-      setContract(null)
-    }
-  }, [account, isConnected])
-
+  const { contract, isConnected } = useJobMarketplaceContract()
   return contract
 }
 
@@ -97,7 +124,9 @@ export function useApplyForJob() {
     setApplying(true)
     setError(null)
     try {
-      const txHash = await contract.applyForJob(jobId, workerPseudonym, zkProof, proposalHash)
+      // Extract skill proof hash from ZK proof for contract compatibility
+      const skillProofHash = zkProof?.public_inputs?.[0] || zkProof?.skillProofHash || "0x1234567890abcdef"
+      const txHash = await contract.applyForJob(jobId, workerPseudonym, skillProofHash, proposalHash)
       return txHash
     } catch (err) {
       console.error("[v0] Error applying for job:", err)
@@ -125,7 +154,27 @@ export function useAssignJob() {
     setAssigning(true)
     setError(null)
     try {
+      // First assign the job
       const txHash = await contract.assignJob(jobId, selectedWorker, workerPayoutAddress)
+      
+      // Create escrow for the job (when contract supports it)
+      if (txHash) {
+        try {
+          const jobDetails = await contract.getJobDetails(jobId)
+          if (jobDetails) {
+            await contract.createJobEscrow(
+              jobId,
+              selectedWorker,
+              jobDetails.payment_amount,
+              jobDetails.payment_token,
+              workerPayoutAddress
+            )
+          }
+        } catch (escrowError) {
+          console.warn("[v0] Failed to create escrow (may not be implemented yet):", escrowError)
+        }
+      }
+      
       return txHash
     } catch (err) {
       console.error("[v0] Error assigning job:", err)

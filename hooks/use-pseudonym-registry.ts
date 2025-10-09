@@ -1,21 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { usePseudonymRegistryContract } from "./use-contracts"
 import { PseudonymRegistryContract, type WorkerProfile } from "@/lib/starknet/contracts"
 
 export function usePseudonymRegistry() {
-  const { account, isConnected } = useStarknetWallet()
-  const [contract, setContract] = useState<PseudonymRegistryContract | null>(null)
-
-  useEffect(() => {
-    if (isConnected && account) {
-      setContract(new PseudonymRegistryContract(account))
-    } else {
-      setContract(null)
-    }
-  }, [account, isConnected])
-
+  const { contract, isConnected } = usePseudonymRegistryContract()
   return contract
 }
 

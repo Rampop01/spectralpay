@@ -1,21 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useZKVerifierContract } from "./use-contracts"
 import { ZKVerifierContract, type ZKProofComponents, type SkillLevel } from "@/lib/starknet/contracts"
 
 export function useZKVerifier() {
-  const { account, isConnected } = useStarknetWallet()
-  const [contract, setContract] = useState<ZKVerifierContract | null>(null)
-
-  useEffect(() => {
-    if (isConnected && account) {
-      setContract(new ZKVerifierContract(account))
-    } else {
-      setContract(null)
-    }
-  }, [account, isConnected])
-
+  const { contract, isConnected } = useZKVerifierContract()
   return contract
 }
 

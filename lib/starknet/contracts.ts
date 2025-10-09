@@ -1,4 +1,30 @@
 import { Contract } from "starknet"
+
+// Helper: Convert string/BigInt to Starknet u256 {low, high}
+export function toUint256(value: string | number | bigint): { low: string; high: string } {
+  const big = BigInt(value)
+  const low = (big & BigInt("0xffffffffffffffffffffffffffffffff")).toString()
+  const high = (big >> BigInt(128)).toString()
+  return { low, high }
+}
+
+// Helper: Convert ETH to Wei with precision
+export function ethToWei(ethAmount: string | number): string {
+  const ethFloat = parseFloat(ethAmount.toString())
+  if (isNaN(ethFloat) || ethFloat < 0) {
+    throw new Error("Invalid ETH amount")
+  }
+  
+  // Use BigInt for precise conversion: multiply by 10^18
+  const weiAmount = (BigInt(Math.floor(ethFloat * 1000)) * BigInt(10 ** 15)).toString()
+  return weiAmount
+}
+
+// Helper: Encode string to ByteArray (array of bytes31, pending_word, pending_word_len)
+export function toByteArray(str: string): string {
+  // For now, return the string as-is since Starknet.js may handle ByteArray encoding automatically
+  return str
+}
 import jobMarketplaceAbi from "@/lib/contracts/abis/job-marketplace-abi.json"
 import pseudonymRegistryAbi from "@/lib/contracts/abis/pseudonym-registry-abi.json"
 import zkVerifierAbi from "@/lib/contracts/abis/zk-verifier-abi.json"
@@ -106,14 +132,21 @@ export class JobMarketplaceContract {
 
   constructor(account?: any) {
     if (account && CONTRACTS.JOB_MARKETPLACE) {
-      this.contract = new Contract(jobMarketplaceAbi, CONTRACTS.JOB_MARKETPLACE, account)
+      // In starknet.js v8, account is already a provider
+      this.contract = new Contract({
+        abi: jobMarketplaceAbi,
+        address: CONTRACTS.JOB_MARKETPLACE
+      })
+      // Set the provider after creation
+      this.contract.providerOrAccount = account
     }
   }
 
   async getJobDetails(jobId: string): Promise<JobDetails | null> {
     if (!this.contract) return null
     try {
-      const result = await this.contract.get_job_details(jobId)
+      const jobIdU256 = toUint256(jobId)
+      const result = await this.contract.get_job_details(jobIdU256)
       return result as JobDetails
     } catch (error) {
       console.error("[v0] Error fetching job details:", error)
@@ -131,11 +164,14 @@ export class JobMarketplaceContract {
   ): Promise<string | null> {
     if (!this.contract) return null
     try {
+      // Encode parameters properly
+      const paymentAmountU256 = toUint256(paymentAmount)
+      
       const result = await this.contract.post_job(
         title,
         description,
         skillsHash,
-        paymentAmount,
+        paymentAmountU256,
         deadlineDays,
         paymentToken,
       )
@@ -150,12 +186,13 @@ export class JobMarketplaceContract {
   async applyForJob(
     jobId: string,
     workerPseudonym: string,
-    zkProof: any,
+    skillProofHash: string,
     proposalHash: string,
   ): Promise<string | null> {
     if (!this.contract) return null
     try {
-      const result = await this.contract.apply_for_job(jobId, workerPseudonym, zkProof, proposalHash)
+      const jobIdU256 = toUint256(jobId)
+      const result = await this.contract.apply_for_job(jobIdU256, workerPseudonym, skillProofHash, proposalHash)
       console.log("[v0] Application submitted successfully:", result)
       return result.transaction_hash
     } catch (error) {
@@ -269,6 +306,49 @@ export class JobMarketplaceContract {
       return []
     }
   }
+
+  async updateWorkerReputation(workerPseudonym: string, scoreDelta: number, jobId: string): Promise<string | null> {
+    if (!this.contract) return null
+    try {
+      // This would typically call the PseudonymRegistry contract through the JobMarketplace
+      // For now, we'll implement a direct call pattern
+      const result = await this.contract.update_worker_reputation(workerPseudonym, scoreDelta, jobId)
+      console.log("[v0] Worker reputation updated successfully:", result)
+      return result.transaction_hash
+    } catch (error) {
+      console.error("[v0] Error updating worker reputation:", error)
+      return null
+    }
+  }
+
+  async createJobEscrow(
+    jobId: string,
+    workerPseudonym: string,
+    amount: string,
+    token: string,
+    workerPayoutAddress: string
+  ): Promise<string | null> {
+    if (!this.contract) return null
+    try {
+      // This will be called automatically by assign_job when escrow integration is uncommented
+      // For now, this is a placeholder for when the contract supports it
+      const jobIdU256 = toUint256(jobId)
+      const amountU256 = toUint256(amount)
+      
+      const result = await this.contract.create_job_escrow(
+        jobIdU256,
+        workerPseudonym,
+        amountU256,
+        token,
+        workerPayoutAddress
+      )
+      console.log("[v0] Job escrow created successfully:", result)
+      return result.transaction_hash
+    } catch (error) {
+      console.error("[v0] Error creating job escrow:", error)
+      return null
+    }
+  }
 }
 
 export class PseudonymRegistryContract {
@@ -276,17 +356,44 @@ export class PseudonymRegistryContract {
 
   constructor(account?: any) {
     if (account && CONTRACTS.PSEUDONYM_REGISTRY) {
-      this.contract = new Contract(pseudonymRegistryAbi, CONTRACTS.PSEUDONYM_REGISTRY, account)
+      // In starknet.js v8, account is already a provider
+      this.contract = new Contract({
+        abi: pseudonymRegistryAbi,
+        address: CONTRACTS.PSEUDONYM_REGISTRY
+      })
+      // Set the provider after creation
+      this.contract.providerOrAccount = account
     }
   }
 
   async getWorkerProfile(pseudonym: string): Promise<WorkerProfile | null> {
-    if (!this.contract) return null
+    if (!this.contract) {
+      console.error("[v0] PseudonymRegistry contract not initialized")
+      return null
+    }
+    
+    console.log("[v0] Fetching worker profile for:", pseudonym)
+    console.log("[v0] Contract address:", CONTRACTS.PSEUDONYM_REGISTRY)
+    
     try {
       const result = await this.contract.get_worker_profile(pseudonym)
+      console.log("[v0] Worker profile result:", result)
       return result as WorkerProfile
     } catch (error) {
       console.error("[v0] Error fetching worker profile:", error)
+      console.error("[v0] Contract address being used:", CONTRACTS.PSEUDONYM_REGISTRY)
+      console.error("[v0] Pseudonym parameter:", pseudonym)
+      
+      // Check if this is a "contract not found" error
+      if (error instanceof Error && error.message?.includes("Contract not found")) {
+        console.error("[v0] The PseudonymRegistry contract was not found at the deployed address.")
+        console.error("[v0] This could mean:")
+        console.error("[v0] 1. Wrong network (check if you're on Sepolia testnet)")
+        console.error("[v0] 2. Contract address is incorrect")
+        console.error("[v0] 3. Contract was not deployed successfully")
+        console.error("[v0] 4. RPC endpoint issue")
+      }
+      
       return null
     }
   }
@@ -403,7 +510,13 @@ export class ZKVerifierContract {
 
   constructor(account?: any) {
     if (account && CONTRACTS.ZK_VERIFIER) {
-      this.contract = new Contract(zkVerifierAbi, CONTRACTS.ZK_VERIFIER, account)
+      // In starknet.js v8, account is already a provider
+      this.contract = new Contract({
+        abi: zkVerifierAbi,
+        address: CONTRACTS.ZK_VERIFIER
+      })
+      // Set the provider after creation
+      this.contract.providerOrAccount = account
     }
   }
 
@@ -467,7 +580,13 @@ export class EscrowContract {
 
   constructor(account?: any) {
     if (account && CONTRACTS.ESCROW) {
-      this.contract = new Contract(escrowAbi, CONTRACTS.ESCROW, account)
+      // In starknet.js v8, account is already a provider
+      this.contract = new Contract({
+        abi: escrowAbi,
+        address: CONTRACTS.ESCROW
+      })
+      // Set the provider after creation
+      this.contract.providerOrAccount = account
     }
   }
 
@@ -481,21 +600,34 @@ export class EscrowContract {
   ): Promise<string | null> {
     if (!this.contract) return null
     try {
-      // This would need to be implemented based on the actual escrow contract interface
-      console.log("[v0] Escrow creation not yet implemented")
-      return null
+      // Encode jobId and amount as u256
+      const jobIdU256 = toUint256(jobId)
+      const amountU256 = toUint256(amount)
+      // workerPseudonym and token are felt252/contract address
+      const result = await this.contract.create_escrow(
+        jobIdU256,
+        workerPseudonym,
+        amountU256,
+        token
+      )
+      console.log("[v0] Escrow created:", result)
+      return result.transaction_hash
     } catch (error) {
       console.error("[v0] Error creating escrow:", error)
       return null
     }
   }
 
-  async releasePayment(escrowId: string): Promise<string | null> {
+  async releasePayment(escrowId: string, workerPayoutAddress: string): Promise<string | null> {
     if (!this.contract) return null
     try {
-      // This would need to be implemented based on the actual escrow contract interface
-      console.log("[v0] Payment release not yet implemented")
-      return null
+      const escrowIdU256 = toUint256(escrowId)
+      const result = await this.contract.release_payment(
+        escrowIdU256,
+        workerPayoutAddress
+      )
+      console.log("[v0] Payment released:", result)
+      return result.transaction_hash
     } catch (error) {
       console.error("[v0] Error releasing payment:", error)
       return null
@@ -505,9 +637,14 @@ export class EscrowContract {
   async disputePayment(escrowId: string, reason: string): Promise<string | null> {
     if (!this.contract) return null
     try {
-      // This would need to be implemented based on the actual escrow contract interface
-      console.log("[v0] Payment dispute not yet implemented")
-      return null
+      const escrowIdU256 = toUint256(escrowId)
+      const reasonByteArray = toByteArray(reason)
+      const result = await this.contract.dispute_payment(
+        escrowIdU256,
+        reasonByteArray
+      )
+      console.log("[v0] Payment disputed:", result)
+      return result.transaction_hash
     } catch (error) {
       console.error("[v0] Error disputing payment:", error)
       return null

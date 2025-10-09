@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useStarknetWallet } from "@/lib/starknet/wallet"
+import { useAccount } from "@starknet-react/core"
+import { WalletConnectButton } from "@/components/wallet-connector"
 import { useWorkerProfile, useRegisterPseudonym, useAddSkillProof, useGetSkillProofs } from "@/hooks/use-pseudonym-registry"
-import { useJobDetails, useApplyForJob, useSubmitWork } from "@/hooks/use-job-marketplace"
+import { useJobDetails, useApplyForJob } from "@/hooks/use-job-marketplace"
 import { createMockZKProof, createMockSkillProof, SkillLevel } from "@/lib/starknet/contracts"
 import { 
   User, 
@@ -24,7 +25,7 @@ import {
 } from "lucide-react"
 
 export default function ForWorkersPage() {
-  const { address, isConnected, connect } = useStarknetWallet()
+  const { address, isConnected } = useAccount()
   const [pseudonym, setPseudonym] = useState("")
   const [isRegistered, setIsRegistered] = useState(false)
   const [activeTab, setActiveTab] = useState("profile")
@@ -33,7 +34,7 @@ export default function ForWorkersPage() {
   const { profile, loading: profileLoading } = useWorkerProfile(pseudonym || null)
   const { registerPseudonym, registering } = useRegisterPseudonym()
   const { addSkillProof, adding: addingSkill } = useAddSkillProof()
-  const { getSkillProofs, skillProofs, loading: skillsLoading } = useGetSkillProofs(pseudonym)
+  const { getSkillProofs, skillProofs, loading: skillsLoading } = useGetSkillProofs()
 
   // Registration form state
   const [registrationForm, setRegistrationForm] = useState({
@@ -59,8 +60,8 @@ export default function ForWorkersPage() {
   }, [address])
 
   const handleRegister = async () => {
-    if (!isConnected) {
-      await connect()
+    if (!isConnected || !address) {
+      alert("Please connect your wallet first to register a pseudonym.")
       return
     }
 
@@ -119,9 +120,7 @@ export default function ForWorkersPage() {
                 Connect your wallet to start working anonymously and earning fairly
               </p>
             </div>
-            <Button size="lg" onClick={connect} className="bg-primary hover:bg-primary/90">
-              Connect Wallet
-            </Button>
+            <WalletConnectButton />
           </div>
         </div>
       </div>
